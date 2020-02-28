@@ -86,6 +86,21 @@ If(-not $paOrder) {
 }
 
 $thumbprint = $certificate.Thumbprint
+
+# test thumbprint and compare against current certificate installed
+If(!(Test-Path "HKLM:\SOFTWARE\Microsoft\Cryptography\Services\NTDS\SystemCertificates\My\Certificates")) {
+    New-Item -Path "HKLM:\SOFTWARE\Microsoft\Cryptography\Services\NTDS\SystemCertificates\My\Certificates" -Force
+} else {
+    $currentCerts = Get-ChildItem -Path "HKLM:\SOFTWARE\Microsoft\Cryptography\Services\NTDS\SystemCertificates\My\Certificates" -Recurse
+    ForEach($currentCert in $currentCerts) {
+        If($thumbprint -eq $currentCert.PSChildName) {
+            Break
+        } else {
+            Remove-Item -Path $currentCert
+        }
+    }
+}
+
 $copyParameters = @{
     'Path' = "HKLM:\Software\Microsoft\SystemCertificates\MY\Certificates\$thumbprint"
     'Destination' = "HKLM:\SOFTWARE\Microsoft\Cryptography\Services\NTDS\SystemCertificates\My\Certificates\$thumbprint"
